@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kassa Operatsiyalari Simulyatori — FAXR MADAD KONSALT</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap');
+
+:root {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --card2: #334155;
+  --accent: #f59e0b;
+  --accent2: #10b981;
+  --accent3: #6366f1;
+  --danger: #ef4444;
+  --text: #f1f5f9;
+  --text2: #94a3b8;
+  --success: #22c55e;
+  --white: #ffffff;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+.main-header {
+  background:linear-gradient(135deg,#1e293b 0%,#0f172a 50%,#1e1b4b 100%);
+  padding:30px 20px;
+  text-align:center;
+  border-bottom:3px solid var(--accent);
+  position:relative;
+  overflow:hidden;
+}
+.main-header::before {
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:radial-gradient(circle at 20% 50%,rgba(245,158,11,0.1) 0%,transparent 50%),
+             radial-gradient(circle at 80% 50%,rgba(99,102,241,0.1) 0%,transparent 50%);
+}
+.main-header h1 {
+  font-family:'Playfair Display',serif;font-size:2.2em;
+  background:linear-gradient(135deg,var(--accent),#fbbf24,var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  position:relative;
+}
+.main-header .school-name {
+  font-size:0.95em;color:var(--accent);margin-top:8px;
+  font-weight:700;letter-spacing:2px;position:relative;
+}
+
+.nav-bar {
+  display:flex;flex-wrap:wrap;justify-content:center;gap:8px;
+  padding:16px 10px;background:var(--card);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  position:sticky;top:0;z-index:100;
+}
+.nav-btn {
+  padding:10px 18px;border:2px solid var(--card2);border-radius:12px;
+  background:transparent;color:var(--text2);cursor:pointer;
+  font-family:'Nunito',sans-serif;font-weight:700;font-size:0.85em;
+  transition:all 0.3s;
+}
+.nav-btn:hover,.nav-btn.active {
+  border-color:var(--accent);color:var(--accent);
+  background:rgba(245,158,11,0.1);transform:translateY(-2px);
+}
+
+.section { display:none;padding:20px;max-width:900px;margin:0 auto;animation:fadeIn 0.5s; }
+.section.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+/* ===================== INFOGRAFIKA ===================== */
+.info-grid { display:grid;gap:20px; }
+.info-card {
+  background:var(--card);border-radius:16px;padding:24px;
+  border-left:4px solid var(--accent);position:relative;overflow:hidden;
+  transition:transform 0.3s;
+}
+.info-card:hover { transform:translateX(5px); }
+.info-card h3 { color:var(--accent);margin-bottom:12px;font-size:1.15em; }
+.info-card p,.info-card li { color:var(--text2);line-height:1.7;font-size:0.95em; }
+.info-card ul { list-style:none;padding:0; }
+.info-card li::before { content:'▸ ';color:var(--accent); }
+
+.info-highlight {
+  background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(99,102,241,0.15));
+  border-radius:16px;padding:24px;text-align:center;border:1px solid rgba(245,158,11,0.3);
+}
+.info-highlight .big-num { font-size:3em;font-weight:900;color:var(--accent); }
+.info-highlight .label { color:var(--text2);margin-top:5px; }
+
+.schema-box {
+  background:var(--card);border-radius:16px;padding:24px;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:15px;
+}
+.schema-item {
+  background:var(--card2);padding:14px 22px;border-radius:12px;
+  text-align:center;font-weight:700;font-size:0.9em;min-width:120px;
+}
+.schema-item.dt { border:2px solid var(--accent);color:var(--accent); }
+.schema-item.kt { border:2px solid var(--accent3);color:var(--accent3); }
+.schema-arrow { font-size:1.8em;color:var(--accent2); }
+
+/* ===================== FLESHKARTA ===================== */
+.flash-container { display:flex;flex-direction:column;align-items:center;gap:20px; }
+.flash-card {
+  width:100%;max-width:500px;min-height:260px;perspective:1000px;cursor:pointer;
+}
+.flash-inner {
+  position:relative;width:100%;height:260px;transition:transform 0.6s;
+  transform-style:preserve-3d;
+}
+.flash-card.flipped .flash-inner { transform:rotateY(180deg); }
+.flash-front,.flash-back {
+  position:absolute;width:100%;height:100%;backface-visibility:hidden;
+  border-radius:20px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:30px;text-align:center;
+}
+.flash-front {
+  background:linear-gradient(135deg,#1e293b,#312e81);
+  border:2px solid var(--accent3);
+}
+.flash-back {
+  background:linear-gradient(135deg,#1e293b,#14532d);
+  border:2px solid var(--accent2);transform:rotateY(180deg);
+}
+.flash-front h3 { color:var(--accent);font-size:1.3em;margin-bottom:10px; }
+.flash-front p { color:var(--text);font-size:1.05em;line-height:1.6; }
+.flash-back p { color:var(--text);font-size:1em;line-height:1.6; }
+.flash-hint { color:var(--text2);font-size:0.8em;margin-top:12px; }
+.flash-nav { display:flex;gap:12px;align-items:center; }
+.flash-nav button {
+  padding:10px 24px;border:none;border-radius:10px;font-family:'Nunito',sans-serif;
+  font-weight:700;cursor:pointer;font-size:0.95em;transition:all 0.3s;
+}
+.flash-prev,.flash-next { background:var(--accent3);color:var(--white); }
+.flash-prev:hover,.flash-next:hover { transform:scale(1.05); }
+.flash-counter { color:var(--text2);font-weight:700; }
+
+/* ===================== GAME ===================== */
+.game-area { text-align:center; }
+.game-top { margin-bottom:20px; }
+.game-score-bar {
+  display:flex;justify-content:space-around;flex-wrap:wrap;gap:10px;
+  background:var(--card);border-radius:14px;padding:16px;margin-bottom:20px;
+}
+.game-stat { text-align:center; }
+.game-stat .val { font-size:1.8em;font-weight:900;color:var(--accent); }
+.game-stat .lbl { font-size:0.8em;color:var(--text2); }
+
+.game-timer-bar {
+  width:100%;height:10px;background:var(--card2);border-radius:5px;
+  margin-bottom:20px;overflow:hidden;
+}
+.game-timer-fill {
+  height:100%;background:linear-gradient(90deg,var(--danger),var(--accent));
+  border-radius:5px;transition:width 0.1s linear;
+}
+
+.game-question-box {
+  background:var(--card);border-radius:16px;padding:28px;margin-bottom:20px;
+  border:1px solid var(--card2);
+}
+.game-question-box h3 { color:var(--text);font-size:1.15em;line-height:1.6;margin-bottom:8px; }
+.game-q-num { color:var(--accent);font-size:0.85em;margin-bottom:8px; }
+
+.game-options { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px; }
+.game-opt {
+  padding:16px;border:2px solid var(--card2);border-radius:14px;
+  background:var(--card);cursor:pointer;font-family:'Nunito',sans-serif;
+  font-weight:700;font-size:0.95em;color:var(--text);
+  transition:all 0.3s;text-align:center;
+}
+.game-opt:hover { border-color:var(--accent);transform:translateY(-2px); }
+.game-opt.correct { border-color:var(--success);background:rgba(34,197,94,0.2);color:var(--success); }
+.game-opt.wrong { border-color:var(--danger);background:rgba(239,68,68,0.2);color:var(--danger); }
+
+.game-start-btn,.game-restart-btn {
+  padding:16px 40px;border:none;border-radius:14px;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:1.1em;
+  cursor:pointer;transition:all 0.3s;
+  background:linear-gradient(135deg,var(--accent),#d97706);color:#000;
+}
+.game-start-btn:hover,.game-restart-btn:hover { transform:scale(1.05); }
+
+.game-result-box {
+  background:var(--card);border-radius:16px;padding:30px;text-align:center;
+}
+.game-result-box h2 { color:var(--accent);font-size:1.8em;margin-bottom:10px; }
+.game-result-box .score-big { font-size:3em;font-weight:900;color:var(--success);margin:15px 0; }
+
+/* ===================== TESTS ===================== */
+.test-container { max-width:700px;margin:0 auto; }
+.test-q-card {
+  background:var(--card);border-radius:16px;padding:24px;margin-bottom:16px;
+  border:1px solid var(--card2);
+}
+.test-q-num { color:var(--accent);font-weight:800;font-size:0.9em;margin-bottom:8px; }
+.test-q-text { color:var(--text);font-size:1.05em;line-height:1.6;margin-bottom:16px; }
+.test-opts label {
+  display:block;padding:12px 16px;margin-bottom:8px;border:2px solid var(--card2);
+  border-radius:12px;cursor:pointer;transition:all 0.3s;font-size:0.95em;
+}
+.test-opts label:hover { border-color:var(--accent); }
+.test-opts input { display:none; }
+.test-opts label.selected { border-color:var(--accent);background:rgba(245,158,11,0.1); }
+.test-opts label.correct-answer { border-color:var(--success);background:rgba(34,197,94,0.15);color:var(--success); }
+.test-opts label.wrong-answer { border-color:var(--danger);background:rgba(239,68,68,0.15);color:var(--danger); }
+
+.test-submit {
+  display:block;margin:20px auto;padding:14px 40px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent3),#4f46e5);color:var(--white);
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:1em;
+  cursor:pointer;transition:all 0.3s;
+}
+.test-submit:hover { transform:scale(1.05); }
+
+.test-result {
+  background:var(--card);border-radius:16px;padding:24px;text-align:center;
+  margin-top:20px;display:none;
+}
+.test-result h3 { color:var(--accent);font-size:1.4em;margin-bottom:10px; }
+.test-result .score { font-size:2.5em;font-weight:900;color:var(--success);margin:10px 0; }
+
+.analysis-box {
+  background:var(--card);border-radius:12px;padding:16px;margin-top:12px;
+  text-align:left;border-left:3px solid var(--danger);
+}
+.analysis-box h4 { color:var(--danger);margin-bottom:8px; }
+.analysis-box p { color:var(--text2);font-size:0.9em;line-height:1.6;margin-bottom:6px; }
+.analysis-box .correct-text { color:var(--success); }
+
+/* ===================== FIREWORKS ===================== */
+.firework-container {
+  position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;
+}
+.firework {
+  position:absolute;width:6px;height:6px;border-radius:50%;
+  animation:fireworkAnim 1s ease-out forwards;
+}
+@keyframes fireworkAnim {
+  0% { transform:scale(1);opacity:1; }
+  100% { transform:scale(0);opacity:0;translate:var(--dx) var(--dy); }
+}
+
+/* ===================== FOOTER ===================== */
+.footer {
+  text-align:center;padding:30px;color:var(--text2);font-size:0.85em;
+  border-top:1px solid var(--card2);margin-top:40px;
+}
+.footer .brand { color:var(--accent);font-weight:800; }
+
+@media(max-width:600px) {
+  .main-header h1 { font-size:1.5em; }
+  .game-options { grid-template-columns:1fr; }
+  .nav-btn { padding:8px 12px;font-size:0.78em; }
+}
+</style>
+</head>
+<body>
+
+<div class="firework-container" id="fireworkContainer"></div>
+
+<div class="main-header">
+  <h1>KASSA OPERATSIYALARI SIMULYATORI</h1>
+  <div class="school-name">FAXR MADAD KONSALT BUXGALTERIYA MAKTABI</div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn active" onclick="showSection('infografika')">Infografika</button>
+  <button class="nav-btn" onclick="showSection('fleshkarta')">Fleshkartalar</button>
+  <button class="nav-btn" onclick="showSection('game')">Debet yoki Kredit?</button>
+  <button class="nav-btn" onclick="showSection('test1')">Test 1 — Nazariya</button>
+  <button class="nav-btn" onclick="showSection('test2')">Test 2 — Tahlil</button>
+  <button class="nav-btn" onclick="showSection('test3')">Test 3 — O'tkazmalar</button>
+</div>
+
+<!-- ==================== 1. INFOGRAFIKA ==================== -->
+<div class="section active" id="sec-infografika">
+  <div class="info-grid">
+    <div class="info-highlight">
+      <div class="big-num">5010</div>
+      <div class="label">Milliy valyutadagi pul mablag'lari schyoti</div>
+    </div>
+
+    <div class="info-card">
+      <h3>Kassa operatsiyalari nima?</h3>
+      <p>Korxona kassasidagi naqd pul mablag'larining kirim va chiqim harakatlari. 5010-schyot milliy valyutadagi, 5020-schyot chet el valyutasidagi pul mablag'larini hisobga oladi.</p>
+    </div>
+
+    <div class="info-card" style="border-left-color:var(--accent2);">
+      <h3>Asosiy kassa hujjatlari</h3>
+      <ul>
+        <li>Kirim kassa orderi (KKO) — kassaga pul kirim bo'lganda</li>
+        <li>Chiqim kassa orderi (ChKO) — kassadan pul chiqimda</li>
+        <li>Kassa daftari (kitobi) — barcha operatsiyalar qayd etiladi</li>
+        <li>Kirim va chiqim orderlari ro'yxatga olish kitobi</li>
+      </ul>
+    </div>
+
+    <div class="schema-box">
+      <div class="schema-item dt">Dt 5010<br><small>Kassaga kirim</small></div>
+      <div class="schema-arrow">⟵</div>
+      <div class="schema-item" style="border:2px solid var(--accent2);color:var(--accent2);">KASSA</div>
+      <div class="schema-arrow">⟶</div>
+      <div class="schema-item kt">Kt 5010<br><small>Kassadan chiqim</small></div>
+    </div>
+
+    <div class="info-card" style="border-left-color:var(--accent3);">
+      <h3>Kassaga kirim manbalari (Dt 5010)</h3>
+      <ul>
+        <li>Bankdan naqd pul olish — Kt 5110</li>
+        <li>Tovar sotishdan tushum — Kt 9010, 9020, 9030</li>
+        <li>Hisobdor shaxsdan qaytarish — Kt 4220, 4230</li>
+        <li>Xodimdan qarz qaytarish — Kt 4720</li>
+        <li>Ta'sischilardan ulush — Kt 4610</li>
+        <li>Inventarlashda ortiqcha — Kt 9390</li>
+        <li>Xaridorlardan bo'nak — Kt 6310</li>
+      </ul>
+    </div>
+
+    <div class="info-card" style="border-left-color:var(--danger);">
+      <h3>Kassadan chiqim yo'nalishlari (Kt 5010)</h3>
+      <ul>
+        <li>Mehnat haqi to'lash — Dt 6710</li>
+        <li>Hisobdor shaxsga bo'nak — Dt 4220, 4230</li>
+        <li>Mol yetkazib beruvchilarga — Dt 6010</li>
+        <li>Bankka pul qaytarish — Dt 5110</li>
+        <li>Inkassatorga topshirish — Dt 5710</li>
+        <li>Dividendlar to'lash — Dt 6610</li>
+        <li>Byudjetga to'lov — Dt 6410</li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h3>Kassa intizomi qoidalari</h3>
+      <ul>
+        <li>Kassa qoldiq limiti bankda belgilanadi</li>
+        <li>Limitdan ortiq naqd pul bankka topshiriladi</li>
+        <li>KKO va ChKO bir nusxada yoziladi</li>
+        <li>KKOsiz pul — ortiqcha hisoblanadi</li>
+        <li>ChKOsiz pul — kamomad hisoblanadi</li>
+        <li>Bo'yab yozish va tuzatishga yo'l qo'yilmaydi</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 2. FLESHKARTALAR ==================== -->
+<div class="section" id="sec-fleshkarta">
+  <div class="flash-container">
+    <div class="flash-card" id="flashCard" onclick="flipCard()">
+      <div class="flash-inner" id="flashInner">
+        <div class="flash-front">
+          <h3 id="flashTerm"></h3>
+          <p id="flashQ"></p>
+          <div class="flash-hint">Javobni ko'rish uchun bosing</div>
+        </div>
+        <div class="flash-back">
+          <p id="flashA"></p>
+        </div>
+      </div>
+    </div>
+    <div class="flash-nav">
+      <button class="flash-prev" onclick="prevFlash()">◀ Oldingi</button>
+      <span class="flash-counter" id="flashCounter">1/10</span>
+      <button class="flash-next" onclick="nextFlash()">Keyingi ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 3. DEBET YOKI KREDIT O'YINI ==================== -->
+<div class="section" id="sec-game">
+  <div class="game-area">
+    <div id="gameStart">
+      <div style="padding:40px;text-align:center;">
+        <h2 style="color:var(--accent);font-size:1.8em;margin-bottom:15px;">Debet yoki Kredit?</h2>
+        <p style="color:var(--text2);margin-bottom:8px;">Xo'jalik operatsiyasi ko'rsatiladi.</p>
+        <p style="color:var(--text2);margin-bottom:25px;">5010 schyot debetga yoki kreditga yozilishini aniqlang!</p>
+        <p style="color:var(--text2);margin-bottom:25px;">20 ta savol • Har biriga 15 soniya</p>
+        <button class="game-start-btn" onclick="startGame()">O'yinni boshlash</button>
+      </div>
+    </div>
+
+    <div id="gamePlay" style="display:none;">
+      <div class="game-score-bar">
+        <div class="game-stat"><div class="val" id="gCorrect">0</div><div class="lbl">To'g'ri</div></div>
+        <div class="game-stat"><div class="val" id="gWrong">0</div><div class="lbl">Noto'g'ri</div></div>
+        <div class="game-stat"><div class="val" id="gTimer">15</div><div class="lbl">Soniya</div></div>
+        <div class="game-stat"><div class="val" id="gQnum">1/20</div><div class="lbl">Savol</div></div>
+      </div>
+      <div class="game-timer-bar"><div class="game-timer-fill" id="gTimerFill"></div></div>
+      <div class="game-question-box">
+        <div class="game-q-num" id="gQlabel"></div>
+        <h3 id="gQuestion"></h3>
+      </div>
+      <div class="game-options" id="gOptions"></div>
+    </div>
+
+    <div id="gameResult" style="display:none;">
+      <div class="game-result-box">
+        <h2>O'yin yakunlandi!</h2>
+        <div class="score-big" id="gFinalScore"></div>
+        <p style="color:var(--text2);margin-bottom:20px;" id="gFinalMsg"></p>
+        <button class="game-restart-btn" onclick="startGame()">Qayta o'ynash</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 4. TEST 1 — NAZARIYA ==================== -->
+<div class="section" id="sec-test1">
+  <h2 style="color:var(--accent);text-align:center;margin-bottom:20px;">Test 1 — Nazariy savollar</h2>
+  <div class="test-container" id="test1Container"></div>
+  <button class="test-submit" onclick="checkTest('test1')">Javoblarni tekshirish</button>
+  <div class="test-result" id="test1Result"></div>
+</div>
+
+<!-- ==================== 5. TEST 2 — TAHLIL ==================== -->
+<div class="section" id="sec-test2">
+  <h2 style="color:var(--accent);text-align:center;margin-bottom:20px;">Test 2 — Tahliliy savollar</h2>
+  <div class="test-container" id="test2Container"></div>
+  <button class="test-submit" onclick="checkTest('test2')">Javoblarni tekshirish</button>
+  <div class="test-result" id="test2Result"></div>
+</div>
+
+<!-- ==================== 6. TEST 3 — O'TKAZMALAR ==================== -->
+<div class="section" id="sec-test3">
+  <h2 style="color:var(--accent);text-align:center;margin-bottom:20px;">Test 3 — Buxgalteriya o'tkazmalari</h2>
+  <p style="text-align:center;color:var(--text2);margin-bottom:20px;">FAXR MADAD KONSALT buxgalteriya maktabi</p>
+  <div class="test-container" id="test3Container"></div>
+  <button class="test-submit" onclick="checkTest('test3')">Javoblarni tekshirish</button>
+  <div class="test-result" id="test3Result"></div>
+</div>
+
+<div class="footer">
+  <span class="brand">FAXR MADAD KONSALT</span> — Buxgalteriya maktabi<br>
+  Kassa operatsiyalari hisobi simulyatori
+</div>
+
+<script>
+// ======================== AUDIO SYSTEM ========================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function getAudioCtx(){ if(!audioCtx) audioCtx = new AudioCtx(); return audioCtx; }
+
+function playCorrectSound(){
+  try{
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type='sine';
+    osc.frequency.setValueAtTime(523,ctx.currentTime);
+    osc.frequency.setValueAtTime(659,ctx.currentTime+0.1);
+    osc.frequency.setValueAtTime(784,ctx.currentTime+0.2);
+    osc.frequency.setValueAtTime(1047,ctx.currentTime+0.3);
+    gain.gain.setValueAtTime(0.3,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.6);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.6);
+  }catch(e){}
+}
+
+function playWrongSound(){
+  try{
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type='sawtooth';
+    osc.frequency.setValueAtTime(200,ctx.currentTime);
+    osc.frequency.setValueAtTime(150,ctx.currentTime+0.15);
+    gain.gain.setValueAtTime(0.25,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.4);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.4);
+  }catch(e){}
+}
+
+function playVictoryMusic(){
+  try{
+    const ctx = getAudioCtx();
+    const notes = [523,659,784,1047,784,1047,1319,1047];
+    const dur = 0.18;
+    notes.forEach((f,i)=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type='sine'; osc.frequency.value=f;
+      gain.gain.setValueAtTime(0.2,ctx.currentTime+i*dur);
+      gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+i*dur+dur*0.9);
+      osc.start(ctx.currentTime+i*dur); osc.stop(ctx.currentTime+i*dur+dur);
+    });
+  }catch(e){}
+}
+
+function playTickSound(){
+  try{
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type='sine'; osc.frequency.value=880;
+    gain.gain.setValueAtTime(0.08,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.05);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.05);
+  }catch(e){}
+}
+
+// ======================== FIREWORKS ========================
+function launchFireworks(){
+  const cont = document.getElementById('fireworkContainer');
+  const colors = ['#f59e0b','#10b981','#6366f1','#ef4444','#ec4899','#22d3ee','#fbbf24'];
+  for(let burst=0;burst<5;burst++){
+    setTimeout(()=>{
+      const cx = Math.random()*window.innerWidth;
+      const cy = Math.random()*window.innerHeight*0.6;
+      for(let i=0;i<30;i++){
+        const p = document.createElement('div');
+        p.className='firework';
+        const angle = (Math.PI*2/30)*i;
+        const dist = 60+Math.random()*80;
+        const dx = Math.cos(angle)*dist;
+        const dy = Math.sin(angle)*dist;
+        p.style.left=cx+'px'; p.style.top=cy+'px';
+        p.style.background=colors[Math.floor(Math.random()*colors.length)];
+        p.style.setProperty('--dx',dx+'px');
+        p.style.setProperty('--dy',dy+'px');
+        p.style.boxShadow='0 0 6px '+p.style.background;
+        cont.appendChild(p);
+        setTimeout(()=>p.remove(),1000);
+      }
+    },burst*300);
+  }
+}
+
+// ======================== NAVIGATION ========================
+function showSection(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ======================== FLASHCARDS ========================
+const flashcards = [
+  {term:"5010-schyot",q:"Bu schyot nima uchun ishlatiladi?",a:"Milliy valyutadagi pul mablag'larini hisobga olish uchun. Debetida — kassaga kirim, kreditida — kassadan chiqim aks ettiriladi."},
+  {term:"Kirim kassa orderi (KKO)",q:"KKO nima va qachon rasmiylashtiriladi?",a:"Tashkilot kassasiga naqd pul qabul qilinganda bir nusxada rasmiylashtiriladigan hujjat. Kvitansiya ajratiladi va pul topshirgan shaxsga beriladi."},
+  {term:"Chiqim kassa orderi (ChKO)",q:"ChKO qachon va qanday yoziladi?",a:"Kassadan naqd pul berilganda bir nusxada rasmiylashtiriladigan hujjat. Rahbar va bosh buxgalter imzolaydi. Bo'yab yozish taqiqlangan."},
+  {term:"Kassa daftari",q:"Kassa daftari nima uchun kerak?",a:"Kassa operatsiyalari buxgalteriya hisobining registri. Barcha kirim va chiqim orderlari asosida kassir tomonidan yuritiladi."},
+  {term:"Kassa qoldiq limiti",q:"Kassa limiti nimani anglatadi?",a:"Bank tomonidan belgilanadigan, kassa qoldig'ining maksimal chegarasi. Limitdan ortiq pul bankka topshirilishi shart."},
+  {term:"Inkassatsiya",q:"Inkassatsiya jarayoni nima?",a:"Naqd pul tushumini maxsus xizmat orqali bankka topshirish jarayoni. Dt 5710 — Kt 5010 o'tkazmasi yoziladi."},
+  {term:"Hisobdor shaxs",q:"Hisobdor shaxs kim va qanday hisob beradi?",a:"Korxonadan bo'nak olgan xodim. Bo'nak hisobotini topshiradi. Foydalanilmagan qoldiq kassaga qaytariladi (Dt 5010 — Kt 4220)."},
+  {term:"Deponentlangan ish haqi",q:"Deponentlash nima?",a:"Muddatida olinmagan ish haqi summasi. 6720-schyotda hisobga olinadi. Keyinchalik kassadan to'langanda Dt 6720 — Kt 5010 yoziladi."},
+  {term:"Kassir javobgarligi",q:"Kassir qanday javobgarlikka ega?",a:"Kassir moddiy javobgar shaxs. Kamomad uchun to'liq moddiy javobgarlik yuklanadi. ChKOsiz berilgan pul kamomad hisoblanadi."},
+  {term:"5110-schyot",q:"5110-schyot nima?",a:"Hisob-kitob (bank) schyoti. Bankdan kassaga pul olinganda Dt 5010 — Kt 5110, kassadan bankka qaytarilganda Dt 5110 — Kt 5010 yoziladi."}
+];
+
+let currentFlash = 0;
+function renderFlash(){
+  const f = flashcards[currentFlash];
+  document.getElementById('flashTerm').textContent = f.term;
+  document.getElementById('flashQ').textContent = f.q;
+  document.getElementById('flashA').textContent = f.a;
+  document.getElementById('flashCounter').textContent = (currentFlash+1)+'/'+flashcards.length;
+  document.getElementById('flashCard').classList.remove('flipped');
+}
+function flipCard(){ document.getElementById('flashCard').classList.toggle('flipped'); }
+function nextFlash(){ currentFlash=(currentFlash+1)%flashcards.length; renderFlash(); }
+function prevFlash(){ currentFlash=(currentFlash-1+flashcards.length)%flashcards.length; renderFlash(); }
+renderFlash();
+
+// ======================== DEBET YOKI KREDIT O'YINI ========================
+const gameQuestions = [
+  {q:"Bankdagi hisob-kitob schyotidan ish haqi uchun naqd pul olindi",opts:["Dt 5010 — Kt 5110","Dt 5110 — Kt 5010","Dt 6710 — Kt 5010","Dt 5010 — Kt 6710"],correct:0},
+  {q:"Kassadan xodimga mehnat haqi naqd pul bilan berildi",opts:["Dt 6710 — Kt 5010","Dt 5010 — Kt 6710","Dt 6710 — Kt 5110","Dt 4220 — Kt 5010"],correct:0},
+  {q:"Sotilgan tovarlar uchun naqd pul tushumi kassaga kirim qilindi",opts:["Dt 5010 — Kt 6010","Dt 9020 — Kt 5010","Dt 5010 — Kt 9020","Dt 5010 — Kt 4010"],correct:2},
+  {q:"Hisobdor shaxs foydalanmagan bo'nak qoldiqni kassaga qaytardi",opts:["Dt 4220 — Kt 5010","Dt 5010 — Kt 4220","Dt 5010 — Kt 4230","Dt 4230 — Kt 5010"],correct:1},
+  {q:"Kassadan xodimga xizmat safari uchun bo'nak berildi",opts:["Dt 5010 — Kt 4220","Dt 4220 — Kt 5010","Dt 4230 — Kt 5010","Dt 4220 — Kt 5110"],correct:1},
+  {q:"Naqd pul tushumi inkassatorga topshirildi",opts:["Dt 5710 — Kt 5010","Dt 5010 — Kt 5710","Dt 5110 — Kt 5010","Dt 5710 — Kt 5110"],correct:0},
+  {q:"Kassadan mol yetkazib beruvchiga naqd pul bilan to'lov qilindi",opts:["Dt 5010 — Kt 6010","Dt 6010 — Kt 5010","Dt 6010 — Kt 5110","Dt 4310 — Kt 5010"],correct:1},
+  {q:"Ta'sischi ustav kapitaliga naqd pul kiritdi",opts:["Dt 5010 — Kt 8310","Dt 5010 — Kt 4610","Dt 4610 — Kt 5010","Dt 8310 — Kt 5010"],correct:1},
+  {q:"Kassadan ta'sischilarga dividendlar naqd pulda to'landi",opts:["Dt 5010 — Kt 6610","Dt 6610 — Kt 5010","Dt 6610 — Kt 5110","Dt 6710 — Kt 5010"],correct:1},
+  {q:"Inventarlash paytida kassada ortiqcha pul aniqlandi",opts:["Dt 5910 — Kt 5010","Dt 5010 — Kt 9390","Dt 9390 — Kt 5010","Dt 5010 — Kt 5910"],correct:1},
+  {q:"Ko'rsatilgan xizmatlar uchun naqd pul kassaga tushdi",opts:["Dt 5010 — Kt 9030","Dt 9030 — Kt 5010","Dt 5010 — Kt 9020","Dt 5010 — Kt 4010"],correct:0},
+  {q:"Naqd pul qoldiq kassadan bank schyotiga qaytarildi",opts:["Dt 5010 — Kt 5110","Dt 5110 — Kt 5010","Dt 5710 — Kt 5010","Dt 5530 — Kt 5010"],correct:1},
+  {q:"Xodimdan berilgan qarz kassaga qaytarildi",opts:["Dt 4720 — Kt 5010","Dt 5010 — Kt 4720","Dt 5010 — Kt 4710","Dt 4710 — Kt 5010"],correct:1},
+  {q:"Kassadan xodimga ssuda naqd pulda berildi",opts:["Dt 5010 — Kt 4720","Dt 4720 — Kt 5010","Dt 4720 — Kt 5110","Dt 4710 — Kt 5010"],correct:1},
+  {q:"Kassada naqd pul kamomadi aniqlandi",opts:["Dt 5910 — Kt 5010","Dt 5010 — Kt 5910","Dt 4730 — Kt 5010","Dt 5010 — Kt 9390"],correct:0},
+  {q:"Mol yetkazib beruvchiga bo'nak kassadan to'landi",opts:["Dt 5010 — Kt 4310","Dt 4310 — Kt 5010","Dt 6010 — Kt 5010","Dt 4310 — Kt 5110"],correct:1},
+  {q:"Asosiy vositalar sotilganidan naqd pul tushdi",opts:["Dt 5010 — Kt 9210","Dt 9210 — Kt 5010","Dt 5010 — Kt 0100","Dt 5010 — Kt 9220"],correct:0},
+  {q:"Byudjet oldidagi qarz kassadan naqd pulda to'landi",opts:["Dt 5010 — Kt 6410","Dt 6410 — Kt 5010","Dt 6410 — Kt 5110","Dt 6510 — Kt 5010"],correct:1},
+  {q:"Tekinga moliyaviy yordam sifatida naqd pul olindi",opts:["Dt 5010 — Kt 9380","Dt 9380 — Kt 5010","Dt 5010 — Kt 8810","Dt 5010 — Kt 9390"],correct:0},
+  {q:"Deponentlangan mehnat haqi kassadan to'landi",opts:["Dt 6710 — Kt 5010","Dt 6720 — Kt 5010","Dt 5010 — Kt 6720","Dt 6720 — Kt 5110"],correct:1}
+];
+
+let gState = {};
+let gTimerInterval;
+
+function startGame(){
+  gState = {current:0, correct:0, wrong:0, answered:false};
+  document.getElementById('gameStart').style.display='none';
+  document.getElementById('gameResult').style.display='none';
+  document.getElementById('gamePlay').style.display='block';
+  shuffleArray(gameQuestions);
+  showGameQ();
+}
+
+function shuffleArray(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+}
+
+function showGameQ(){
+  if(gState.current >= 20){
+    endGame(); return;
+  }
+  gState.answered = false;
+  const q = gameQuestions[gState.current];
+  document.getElementById('gQnum').textContent = (gState.current+1)+'/20';
+  document.getElementById('gQlabel').textContent = (gState.current+1)+'-savol';
+  document.getElementById('gQuestion').textContent = q.q;
+  document.getElementById('gCorrect').textContent = gState.correct;
+  document.getElementById('gWrong').textContent = gState.wrong;
+
+  // Shuffle options
+  const indices = [0,1,2,3];
+  shuffleArray(indices);
+  const optDiv = document.getElementById('gOptions');
+  optDiv.innerHTML = '';
+  indices.forEach(idx => {
+    const btn = document.createElement('div');
+    btn.className = 'game-opt';
+    btn.textContent = q.opts[idx];
+    btn.dataset.idx = idx;
+    btn.onclick = function(){ selectGameAnswer(this, idx, q.correct); };
+    optDiv.appendChild(btn);
+  });
+
+  // Timer
+  let timeLeft = 15;
+  document.getElementById('gTimer').textContent = timeLeft;
+  document.getElementById('gTimerFill').style.width = '100%';
+  clearInterval(gTimerInterval);
+  const startT = Date.now();
+  gTimerInterval = setInterval(()=>{
+    if(gState.answered) return;
+    const elapsed = (Date.now()-startT)/1000;
+    const remain = Math.max(0, 15 - elapsed);
+    document.getElementById('gTimer').textContent = Math.ceil(remain);
+    document.getElementById('gTimerFill').style.width = (remain/15*100)+'%';
+    if(remain <= 5 && remain > 0 && Math.ceil(remain) !== Math.ceil(remain+0.1)){
+      playTickSound();
+    }
+    if(remain <= 0){
+      clearInterval(gTimerInterval);
+      timeUp();
+    }
+  },100);
+}
+
+function selectGameAnswer(el, chosen, correct){
+  if(gState.answered) return;
+  gState.answered = true;
+  clearInterval(gTimerInterval);
+
+  document.querySelectorAll('.game-opt').forEach(o=>{
+    if(parseInt(o.dataset.idx) === correct) o.classList.add('correct');
+    if(parseInt(o.dataset.idx) === chosen && chosen !== correct) o.classList.add('wrong');
+    o.style.pointerEvents = 'none';
+  });
+
+  if(chosen === correct){
+    gState.correct++;
+    playCorrectSound();
+    launchFireworks();
+  } else {
+    gState.wrong++;
+    playWrongSound();
+  }
+
+  document.getElementById('gCorrect').textContent = gState.correct;
+  document.getElementById('gWrong').textContent = gState.wrong;
+
+  setTimeout(()=>{
+    gState.current++;
+    showGameQ();
+  },1500);
+}
+
+function timeUp(){
+  if(gState.answered) return;
+  gState.answered = true;
+  gState.wrong++;
+  playWrongSound();
+  const q = gameQuestions[gState.current];
+  document.querySelectorAll('.game-opt').forEach(o=>{
+    if(parseInt(o.dataset.idx) === q.correct) o.classList.add('correct');
+    o.style.pointerEvents = 'none';
+  });
+  document.getElementById('gWrong').textContent = gState.wrong;
+  setTimeout(()=>{
+    gState.current++;
+    showGameQ();
+  },1500);
+}
+
+function endGame(){
+  clearInterval(gTimerInterval);
+  document.getElementById('gamePlay').style.display='none';
+  document.getElementById('gameResult').style.display='block';
+  const pct = Math.round(gState.correct/20*100);
+  document.getElementById('gFinalScore').textContent = gState.correct + '/20 (' + pct + '%)';
+  let msg = '';
+  if(pct >= 90){ msg='Ajoyib natija! Siz kassa operatsiyalarini a\'lo bilasiz!'; launchFireworks(); playVictoryMusic(); }
+  else if(pct >= 70){ msg='Yaxshi natija! Yana biroz mashq qiling.'; playCorrectSound(); }
+  else if(pct >= 50){ msg='O\'rtacha natija. Mavzuni qayta takrorlang.'; }
+  else { msg='Mavzuni diqqat bilan o\'rganing va qayta urinib ko\'ring.'; }
+  document.getElementById('gFinalMsg').textContent = msg;
+}
+
+// ======================== TEST DATA ========================
+const test1Data = [
+  {q:"Kassaga naqd pul qabul qilinganda qaysi hujjat rasmiylashtiriladai?",
+   opts:["Kirim kassa orderi","Chiqim kassa orderi","To'lov qaydnomasi","Hisob-faktura hujjati"],correct:0},
+  {q:"Kassadan naqd pul berishda qaysi hujjat yoziladi?",
+   opts:["To'lov topshiriqnomasi","Kirim kassa orderi","Chiqim kassa orderi","Bank ko'chirmasi hujjati"],correct:2},
+  {q:"5010-schyot debeti nimani ko'rsatadi?",
+   opts:["Kassadan pul chiqimi","Kassaga pul kirimi","Bankdagi pul qoldiq","Xarajat hisobga olish"],correct:1},
+  {q:"Kassa daftarini kim yuritadi?",
+   opts:["Faqat bosh buxgalter","Faqat korxona rahbari","Kassir yoki maxsus xodim","Faqat moliya bo'limi"],correct:2},
+  {q:"KKO necha nusxada rasmiylashtiradi?",
+   opts:["Ikki nusxada yoziladi","Bir nusxada yoziladi","Uch nusxada yoziladi","To'rt nusxada yoziladi"],correct:1},
+  {q:"KKOsiz kassadagi pul qanday hisoblanadi?",
+   opts:["Kamomad deb hisoblanadi","Ortiqcha deb hisoblanadi","Kredit deb hisoblanadi","Debet deb hisoblanadi"],correct:1},
+  {q:"Kassa qoldiq limitini kim belgilaydi?",
+   opts:["Korxona direktori belgilaydi","Soliq inspeksiyasi belgilaydi","Xizmat ko'rsatuvchi bank","Bosh buxgalter belgilaydi"],correct:2},
+  {q:"ChKOda bo'yab yozishga ruxsat bormi?",
+   opts:["Ha albatta ruxsat bor","Faqat rahbar ruxsati bilan","Yo'q mutlaqo taqiqlangan","Faqat summa qismida ruxsat"],correct:2},
+  {q:"Limitdan ortiq pul bilan nima qilinadi?",
+   opts:["Kassada saqlab qo'yiladi","Bankka topshiriladi albatta","Xodimlarga taqsimlanadi","Hisobdor shaxsga beriladi"],correct:1},
+  {q:"ChKOsiz kassadan berilgan pul nima?",
+   opts:["Ortiqcha deb hisoblanadi","Kamomad deb hisoblanadi","Kirim deb hisoblanadi","Sarf deb hisoblanadi"],correct:1}
+];
+
+const test2Data = [
+  {q:"Kassir KKOsiz naqd pul qabul qildi. Bu holatda nima noto'g'ri?",
+   opts:["Hujjatsiz pul qabul qilish","Kassir hisoboti to'g'ri","Pul summasi to'g'ri kiritildi","Kassa daftari to'ldirildi"],correct:0},
+  {q:"ChKOda rahbar imzosi yo'q. Nima yetishmayapti?",
+   opts:["Kassir imzosi yetishmaydi","Rahbar imzosi yetishmaydi","Buxgalter muhri yetishmaydi","Kvitansiya ajratilmagan"],correct:1},
+  {q:"Kassa daftariga yozuv kiritilmagan. Qanday tuzatiladi?",
+   opts:["KKO asosida yozuv kiritish","Yangi daftar sotib olish","Rahbar buyruq chiqarishi","Bankka xabar berish kerak"],correct:0},
+  {q:"Kassir limitdan ortiq pulni saqlayapti. Nima noto'g'ri?",
+   opts:["Kassa limiti buzilmoqda","Kassa daftari to'ldirilmagan","KKO rasmiylashtirish kerak","ChKO rasmiylashtirish kerak"],correct:0},
+  {q:"Bo'nak hisoboti taqdim etilmagan. Nima yetishmayapti?",
+   opts:["Kirim kassa orderi kerak","Bo'nak hisoboti yetishmaydi","Chiqim kassa orderi kerak","Kassa daftari yetishmaydi"],correct:1},
+  {q:"Kassir KKOda summani bo'yab tuzatdi. Nima noto'g'ri?",
+   opts:["Tuzatish qoidaga zid holat","Summa to'g'ri yozilmagan","KKO raqami noto'g'ri bo'ldi","Kvitansiya berilmagan shaxsga"],correct:0},
+  {q:"Quyidagi fikrlardan qaysi biri to'g'ri emas?",
+   opts:["KKO bir nusxada yoziladi","ChKO uch nusxada yoziladi","Kassir moddiy javobgar shaxs","Limit bank tomonidan belgilanadi"],correct:1},
+  {q:"Pul oluvchi ChKOga imzo qo'ymadi. Nima noto'g'ri?",
+   opts:["Oluvchi imzosi qo'yilmagan","ChKO raqami noto'g'ri bo'ldi","Kassir hisoboti to'g'ri emas","Rahbar imzosi yetishmaydi"],correct:0},
+  {q:"Naqd tushum inkassatsiya qilinmagan. Qanday tuzatiladi?",
+   opts:["Bankka darhol topshirish kerak","Kassada saqlab qo'yish kerak","Hisobdor shaxsga berish kerak","Xodimlarga taqsimlash kerak"],correct:0},
+  {q:"Quyidagi fikrlardan qaysi biri to'g'ri emas?",
+   opts:["Kassir kassa daftarini yuritadi","Naqd tushum faqat kirim bo'ladi","KKOsiz pul ortiqcha hisoblanadi","ChKO rahbar imzosisiz yaroqli"],correct:3}
+];
+
+const test3Data = [
+  {q:"Bankdan kassaga ish haqi uchun pul olindi. O'tkazma qanday?",
+   opts:["Dt 5010 — Kt 5110","Dt 5110 — Kt 5010","Dt 6710 — Kt 5110","Dt 5010 — Kt 6710"],correct:0},
+  {q:"Kassadan xodimlarga ish haqi to'landi. O'tkazma qanday?",
+   opts:["Dt 5010 — Kt 6710","Dt 6710 — Kt 5110","Dt 6710 — Kt 5010","Dt 6720 — Kt 5010"],correct:2},
+  {q:"Tovar sotishdan naqd pul tushdi. O'tkazma qanday?",
+   opts:["Dt 9020 — Kt 5010","Dt 5010 — Kt 9020","Dt 5010 — Kt 4010","Dt 5010 — Kt 9010"],correct:1},
+  {q:"Hisobdor shaxsga bo'nak naqd berildi. O'tkazma qanday?",
+   opts:["Dt 5010 — Kt 4220","Dt 4220 — Kt 5010","Dt 4230 — Kt 5010","Dt 4220 — Kt 5110"],correct:1},
+  {q:"Naqd pul inkassatorga topshirildi. O'tkazma qanday?",
+   opts:["Dt 5010 — Kt 5710","Dt 5110 — Kt 5010","Dt 5710 — Kt 5010","Dt 5710 — Kt 5110"],correct:2},
+  {q:"Kassaga ta'sischi ustav ulushi sifatida pul kiritdi. O'tkazma?",
+   opts:["Dt 4610 — Kt 5010","Dt 5010 — Kt 8310","Dt 5010 — Kt 4610","Dt 8310 — Kt 5010"],correct:2},
+  {q:"Kassadan yetkazib beruvchiga qarz to'landi. O'tkazma qanday?",
+   opts:["Dt 5010 — Kt 6010","Dt 6010 — Kt 5010","Dt 6010 — Kt 5110","Dt 4310 — Kt 5010"],correct:1},
+  {q:"Kassadan ortiq pul bankka qaytarildi. O'tkazma qanday?",
+   opts:["Dt 5010 — Kt 5110","Dt 5110 — Kt 5010","Dt 5710 — Kt 5010","Dt 5530 — Kt 5010"],correct:1},
+  {q:"Inventarlashda kassada ortiqcha pul topildi. O'tkazma qanday?",
+   opts:["Dt 5910 — Kt 5010","Dt 5010 — Kt 5910","Dt 5010 — Kt 9390","Dt 9390 — Kt 5010"],correct:2},
+  {q:"Kassada kamomad aniqlandi va hisobga olindi. O'tkazma qanday?",
+   opts:["Dt 5010 — Kt 5910","Dt 5910 — Kt 5010","Dt 4730 — Kt 5010","Dt 5010 — Kt 9390"],correct:1}
+];
+
+// ======================== TEST RENDERER ========================
+function renderTest(containerId, data){
+  const cont = document.getElementById(containerId);
+  cont.innerHTML = '';
+  data.forEach((item,qi)=>{
+    // Shuffle options
+    const indices = [0,1,2,3];
+    shuffleArray(indices);
+    item._shuffled = indices;
+
+    const card = document.createElement('div');
+    card.className = 'test-q-card';
+    let html = `<div class="test-q-num">${qi+1}-savol</div>`;
+    html += `<div class="test-q-text">${item.q}</div>`;
+    html += `<div class="test-opts" id="${containerId}_q${qi}">`;
+    indices.forEach((optIdx,li)=>{
+      html += `<label data-opt="${optIdx}" onclick="selectTestOpt(this,'${containerId}',${qi})">
+        <input type="radio" name="${containerId}_q${qi}" value="${optIdx}">
+        ${String.fromCharCode(65+li)}) ${item.opts[optIdx]}
+      </label>`;
+    });
+    html += `</div>`;
+    card.innerHTML = html;
+    cont.appendChild(card);
+  });
+}
+
+function selectTestOpt(label, testId, qi){
+  const parent = document.getElementById(testId+'_q'+qi);
+  parent.querySelectorAll('label').forEach(l=>l.classList.remove('selected'));
+  label.classList.add('selected');
+  label.querySelector('input').checked = true;
+}
+
+function checkTest(testId){
+  let data;
+  if(testId==='test1') data = test1Data;
+  else if(testId==='test2') data = test2Data;
+  else data = test3Data;
+
+  let score = 0;
+  let wrongAnalysis = [];
+
+  data.forEach((item,qi)=>{
+    const parent = document.getElementById(testId+'Container_q'+qi);
+    const selected = parent.querySelector('input:checked');
+    const chosenVal = selected ? parseInt(selected.value) : -1;
+
+    parent.querySelectorAll('label').forEach(l=>{
+      l.style.pointerEvents = 'none';
+      const optVal = parseInt(l.dataset.opt);
+      if(optVal === item.correct){
+        l.classList.add('correct-answer');
+      }
+      if(optVal === chosenVal && chosenVal !== item.correct){
+        l.classList.add('wrong-answer');
+      }
+    });
+
+    if(chosenVal === item.correct){
+      score++;
+    } else {
+      wrongAnalysis.push({
+        num: qi+1,
+        question: item.q,
+        yourAnswer: chosenVal >= 0 ? item.opts[chosenVal] : 'Javob berilmagan',
+        correctAnswer: item.opts[item.correct]
+      });
+    }
+  });
+
+  const resultDiv = document.getElementById(testId+'Result');
+  resultDiv.style.display = 'block';
+  const pct = Math.round(score/data.length*100);
+  let html = `<h3>Natija</h3><div class="score">${score}/${data.length} (${pct}%)</div>`;
+
+  if(score === data.length){
+    html += `<p style="color:var(--success);">Barcha javoblar to'g'ri! Ajoyib!</p>`;
+    launchFireworks(); playVictoryMusic();
+  } else {
+    html += `<p style="color:var(--text2);">Quyida noto'g'ri javoblar tahlili:</p>`;
+    wrongAnalysis.forEach(w=>{
+      html += `<div class="analysis-box">
+        <h4>${w.num}-savol: ${w.question}</h4>
+        <p>Sizning javobingiz: <span style="color:var(--danger);">${w.yourAnswer}</span></p>
+        <p>To'g'ri javob: <span class="correct-text">${w.correctAnswer}</span></p>
+      </div>`;
+    });
+  }
+  resultDiv.innerHTML = html;
+  resultDiv.scrollIntoView({behavior:'smooth'});
+}
+
+// ======================== INIT TESTS ========================
+renderTest('test1Container', test1Data);
+renderTest('test2Container', test2Data);
+renderTest('test3Container', test3Data);
+</script>
+</body>
+</html>
